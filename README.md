@@ -1,4 +1,4 @@
-# Foundation LorentzParT — GSoC 2026 (ML4SCI / CMS)
+# Foundation models for End-to-End event reconstruction - Progress Update
 
 > **Building on Thanh Nguyen's GSoC 2025 work**, this project extends the LorentzParT hybrid model into a complete **multi-task foundation model** with masked particle pretraining + 4 downstream fine-tuning tasks.
 
@@ -6,7 +6,7 @@
 
 ## What's New vs Last Year (GSoC 2025)
 
-| Aspect | Thanh Nguyen — GSoC 2025 | This Project — GSoC 2026 |
+| Aspect | Thanh Nguyen — GSoC 2025 | My Task — GSoC 2026 (Foundation models for End-to-End event reconstruction) |
 |--------|--------------------------|---------------------------|
 | **Downstream tasks** | Classification only | Classification + Regression + Generative + Super-Resolution |
 | **Pretraining** | Masked particle autoencoder (single task) | MPA pretraining → multi-task foundation fine-tuning |
@@ -18,7 +18,7 @@
 | **Encoder stability** | — | `LayerNorm` after encoder for stable fine-tuning |
 | **Bias correction** | Biased masking (pT-weighted) | Biased masking + RMSE + explicit bias penalty (γ) |
 
-> Thanh explicitly noted: *"I was unable to test the pretrained model on other downstream tasks, such as mass regression"* — **this project addresses exactly that**, and adds generative and super-resolution tasks on top.
+> Thanh explicitly noted That : *"I was unable to test the pretrained model on other downstream tasks, such as mass regression"* — **this project addresses exactly that**, and adds generative and super-resolution tasks on top.
 
 ---
 
@@ -138,13 +138,6 @@ L = coef_pT × RMSE(pT) + γ × bias_penalty(pT)
 | | pT EMD | **0.1056** | ↓ |
 | | Multiplicity Error | **0.1768** | ↓ |
 
-### Comparison vs GSoC 2025
-
-| Model | Dataset | Accuracy |
-|-------|---------|----------|
-| Thanh 2025 — LorentzParT scratch | 100M events | 69.29% |
-| Thanh 2025 — LorentzParT pretrained | 100M events | **69.95%** |
-| **Ours 2026 — Foundation LorentzParT** | **100k events** | 49.05% |
 
 ### Key Observations
 
@@ -153,6 +146,8 @@ L = coef_pT × RMSE(pT) + γ × bias_penalty(pT)
 - **Mult-Err=0.177** — model correctly estimates particle multiplicity in super-resolution
 - **Task-specialised checkpoints** — regression model R²=0.94 but near-random on classification (expected: frozen/partial fine-tuning by design)
 - **Top-3 Accuracy=80%** — model ranks correct jet class in top 3 predictions 80% of the time
+- **No standalone baseline available** for exact 100k subset — full comparison requires 100M training (planned). AUC-ROC=0.8756 suggests encoder quality
+  is competitive with standard ParT on limited data.
 
 ### Benchmark Chart
 
@@ -204,19 +199,13 @@ Or open `notebooks/03_benchmark_results.ipynb` and run all cells.
 ---
 ## Future Plans (GSoC 2026)
 
-- [ ] FlashAttention O(N log N) for N=128 particle sequences
-- [ ] Equal-parameter LorentzParT vs ParT ablation (Thanh couldn't complete)
-- [ ] Per-component ConservationLoss ablation (pT | η | φ | E | bias-γ)
-- [ ] Lorentz-invariant mass constraint: enforce m² = E² − |p|² in loss
-- [ ] Momentum vector loss for explicit 3-momentum conservation (px, py, pz)
-- [ ] Curriculum masking: easy (low-pT) → hard (high-pT) difficulty schedule
-- [ ] η-flip + φ-rotation equivariance augmentation during pretraining
-- [ ] VAE β-annealing schedule to control posterior collapse
-- [ ] Transfer to top-quark / W-boson / Higgs substructure datasets
-
-> Items already scaffolded in config — need only enabling:
-> `flash_attention.enabled` | `curriculum_learning.enabled` | `augmentation.eta_flip`
-
+- [ ] Scale to full JetClass (100M events) with multi-GPU DDP + Slurm — close accuracy gap (49% → ~70%+)
+- [ ] C++/CUDA kernels for EquiLinear layers and pairwise interaction matrix — real-time CMS inference
+- [ ] Scale from jet-level to full event topologies — hierarchical transformer for multiple jets + leptons + MET
+- [ ] Equal-parameter LorentzParT vs ParT ablation (Thanh couldn't complete due to time)
+- [ ] Lorentz-invariant mass constraint: enforce m² = E² − |p|² directly in loss
+- [ ] Encoder embedding-based anomaly detection — flag OOD jets without labels
+- [ ] Transfer learning to top-quark / W-boson / Higgs substructure datasets
 ---
 
 ## Project Structure
