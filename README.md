@@ -80,7 +80,6 @@ Shared embeddings (B, N, 128)  +  equivariant features (B, N, 16)
 | dφ | **Unchanged** | Periodicity handled by cosine loss |
 | Jet mass | z-score | Regression target |
 
----
 
 ---
 
@@ -149,9 +148,17 @@ L = coef_pT × RMSE(pT) + γ × bias_penalty(pT)
 - **No standalone baseline available** for exact 100k subset — full comparison requires 100M training (planned). AUC-ROC=0.8756 suggests encoder quality
   is competitive with standard ParT on limited data.
 
+
 ### Benchmark Chart
 
 ![Benchmark Summary](outputs/benchmark_summary_all.png)
+
+> **Note:** The chart shows results from **task-specialised checkpoints** — each bar
+> represents the best checkpoint trained specifically for that task
+> (`classification_best.pt` for classification, `regression_best.pt` for regression, etc.).
+> Other checkpoints evaluated on non-target tasks will score near-random by design
+> (frozen/partial fine-tuning). See the Per-Task Best Checkpoint table above for
+> the correct per-task numbers.
 
 > See `notebooks/02_evaluation_and_results.ipynb` for full plots:
 > confusion matrix, ROC curves, 2D reconstruction histograms (pT, η, φ, E).
