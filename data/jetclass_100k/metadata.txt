@@ -1,0 +1,24 @@
+# JetClass preprocessing metadata
+seed:           42
+max_particles:  128
+train_frac:     0.8
+val_frac:       0.1
+test_frac:      0.1
+n_classes:      10
+feature_layout: [pt, deta, dphi, energy]
+class_names:    ['QCD', 'Hbb', 'Hcc', 'Hgg', 'H4q', 'Hqql', 'Zqq', 'Wqq', 'Tbl', 'Tbq']
+train_samples:  80000
+val_samples:    10000
+test_samples:   10000
+
+# Samples per class in train split (should be equal):
+  [0]    QCD: 8000
+  [1]    Hbb: 8000
+  [2]    Hcc: 8000
+  [3]    Hgg: 8000
+  [4]    H4q: 8000
+  [5]   Hqql: 8000
+  [6]    Zqq: 8000
+  [7]    Wqq: 8000
+  [8]    Tbl: 8000
+  [9]    Tbq: 8000

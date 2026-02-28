@@ -1,0 +1,98 @@
+{
+  "classification": {
+    "FoundationLorentzParT (classification_best)": {
+      "accuracy": 0.4905,
+      "macro_f1": 0.47981975871297944,
+      "auc_roc": 0.8756099555555557,
+      "top3_acc": 0.8005
+    },
+    "FoundationLorentzParT (regression_best)": {
+      "accuracy": 0.1055,
+      "macro_f1": 0.06649422505497897,
+      "auc_roc": 0.5141844833333333,
+      "top3_acc": 0.32
+    },
+    "FoundationLorentzParT (generative_best)": {
+      "accuracy": 0.1087,
+      "macro_f1": 0.051435759955185754,
+      "auc_roc": 0.5306701222222221,
+      "top3_acc": 0.3355
+    },
+    "FoundationLorentzParT (superresolution_best)": {
+      "accuracy": 0.1065,
+      "macro_f1": 0.05200212101901145,
+      "auc_roc": 0.5065665944444444,
+      "top3_acc": 0.3268
+    }
+  },
+  "regression": {
+    "FoundationLorentzParT (classification_best)": {
+      "mse": 0.811100959777832,
+      "mae": 0.7139758467674255,
+      "r2": 0.19279474020004272,
+      "resolution": 1.140097975730896
+    },
+    "FoundationLorentzParT (regression_best)": {
+      "mse": 0.059968501329422,
+      "mae": 0.16891063749790192,
+      "r2": 0.9403195381164551,
+      "resolution": 0.3083985149860382
+    },
+    "FoundationLorentzParT (generative_best)": {
+      "mse": 1.0029323101043701,
+      "mae": 0.8006198406219482,
+      "r2": 0.001884758472442627,
+      "resolution": 1.2673797607421875
+    },
+    "FoundationLorentzParT (superresolution_best)": {
+      "mse": 1.021309494972229,
+      "mae": 0.8084141612052917,
+      "r2": -0.016404151916503906,
+      "resolution": 1.2788293361663818
+    }
+  },
+  "generative": {
+    "FoundationLorentzParT (classification_best)": {
+      "mmd": 0.3015012741088867,
+      "marginal_kl": 14.14355781079485,
+      "marginal_mse": 0.004045145593864322
+    },
+    "FoundationLorentzParT (regression_best)": {
+      "mmd": 0.3210218548774719,
+      "marginal_kl": 15.76895912899496,
+      "marginal_mse": 0.005271991105020191
+    },
+    "FoundationLorentzParT (generative_best)": {
+      "mmd": 0.14638876914978027,
+      "marginal_kl": 3.795270544274484,
+      "marginal_mse": 0.0023691243044511915
+    },
+    "FoundationLorentzParT (superresolution_best)": {
+      "mmd": 0.3186681270599365,
+      "marginal_kl": 14.41493429533312,
+      "marginal_mse": 0.005110920010762944
+    }
+  },
+  "superresolution": {
+    "FoundationLorentzParT (classification_best)": {
+      "chamfer": 0.4115363714309409,
+      "pt_emd": 1.622149540966336,
+      "mult_err": 2.8715611768271474
+    },
+    "FoundationLorentzParT (regression_best)": {
+      "chamfer": 0.4155729802757502,
+      "pt_emd": 1.7003323641675019,
+      "mult_err": 4.231685715154353
+    },
+    "FoundationLorentzParT (generative_best)": {
+      "chamfer": 0.3660894332784228,
+      "pt_emd": 1.6653582561078475,
+      "mult_err": 3.7612173239750177
+    },
+    "FoundationLorentzParT (superresolution_best)": {
+      "chamfer": 0.1970426045182685,
+      "pt_emd": 0.10557082090358638,
+      "mult_err": 0.17679082274964572
+    }
+  }
+}

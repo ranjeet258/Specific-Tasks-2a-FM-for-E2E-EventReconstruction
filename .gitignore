@@ -1,0 +1,52 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# ── Large checkpoint files 
+outputs/finetune/classification/*.pt
+outputs/finetune/regression/*.pt
+outputs/finetune/generative/*.pt
+outputs/finetune/superresolution/*.pt
+outputs/foundation_lorentz_part_gsoc2026/checkpoints/*.pt
+outputs/pretrain/*.pt
+
+# ── Keep───────────────────
+!outputs/eval_all_results.json
+!outputs/benchmark_summary.png
+!outputs/benchmark_summary_all.png
+!outputs/pretrain/pretrain_history.json
+
+# ── Data files (too large) ────────────────────────────────────────
+data/jetclass_100k/train.npz
+data/jetclass_100k/val.npz
+data/jetclass_100k/test.npz
+
+# ── Keep metadata ─────────────────────────────────────────────────
+!data/jetclass_100k/metadata.txt
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs / wandb
+wandb/
+*.log
+```
+
+## Blocked from GitHub ✗
+```
+all *.pt files     ← 16 checkpoint files, each 10-50MB
+train/val/test.npz ← large data files
+venv/              ← 500MB+
+__pycache__/       ← compiled Python

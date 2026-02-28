@@ -1,0 +1,180 @@
+advanced:
+  augmentation:
+    enabled: false
+    eta_flip: false
+    phi_rotation: true
+  curriculum_learning:
+    enabled: false
+    strategy: mask_difficulty
+  vae_beta_schedule:
+    enabled: true
+    end_beta: 1.0
+    start_beta: 0.0
+    warmup_steps: 1000
+data:
+  compute_mass: true
+  data_path: ./data/jetclass_100k
+  mask_particle: true
+  mask_ratio: 0.3
+  mask_strategy: biased
+  max_particles: 128
+  normalize: true
+  num_classes: 10
+  num_particle_features: 4
+  num_samples: 100000
+  test_size: 0.1
+  train_size: 0.8
+  val_size: 0.1
+dynamics:
+  checkpointing:
+    save_best: true
+    save_interval: 10
+    save_last: true
+  early_stopping:
+    enabled: true
+    min_delta: 0.0001
+    patience: 15
+  logging:
+    log_interval: 50
+    tensorboard_enabled: true
+    wandb_enabled: false
+    wandb_project: foundation-lorentz-part
+evaluation:
+  metrics:
+    classification:
+    - accuracy
+    - top3_accuracy
+    - f1_macro
+    - auc_roc
+    generative:
+    - mmd
+    - marginal_kl
+    - marginal_mse
+    regression:
+    - mse
+    - mae
+    - r2_score
+    - mass_resolution
+    superresolution:
+    - chamfer_distance
+    - pt_emd
+    - multiplicity_err
+  plot_confusion_matrix: true
+  plot_loss_curves: true
+  plot_reconstruction_quality: true
+experiment:
+  author: Ranjeet Gupta
+  base_work: "Thanh Nguyen GSoC 2025 \u2014 LorentzParT"
+  description: Foundation model with MPA pre-training + 5-task fine-tuning
+  name: foundation_lorentz_part_gsoc2026
+hardware:
+  backend: nccl
+  device: cuda
+  distributed: false
+  num_workers: 4
+  persistent_workers: true
+  pin_memory: true
+  world_size: 1
+improvements:
+  flash_attention:
+    enabled: false
+  gradient_checkpointing: false
+  optimized_conservation:
+    enabled: true
+    use_momentum_vector_loss: false
+  strategy: FlashAttention_and_OptimizedConservation
+  torch_compile:
+    enabled: false
+    mode: default
+loss:
+  classification_criterion: CrossEntropy
+  conservation_loss:
+    beta: 1.0
+    gamma: 0.5
+    loss_coef:
+    - 0.25
+    - 0.25
+    - 0.25
+    - 0.25
+  huber_delta: 1.0
+  reconstruction_criterion: Conservation
+  regression_criterion: mse
+  task_weights:
+    classification: 3.0
+    reconstruction: 1.0
+    regression: 0.5
+model:
+  classification:
+    hidden_dim: 256
+    num_classes: 10
+  dropout: 0.1
+  embed_dim: 128
+  expansion_factor: 4
+  generative:
+    beta: 1.0
+    hidden_dim: 256
+    latent_dim: 32
+    particle_dim: 4
+  in_s_channels: null
+  name: FoundationLorentzParT
+  num_heads: 8
+  num_layers: 8
+  out_s_channels: null
+  pair_embed_dims:
+  - 64
+  - 64
+  - 64
+  reconstruction:
+    equi_dim: 16
+    hidden_dim: 256
+  regression:
+    hidden_dim: 256
+    num_targets: 1
+  superresolution:
+    hidden_dim: 256
+    n_high: 128
+    n_low: 30
+tasks:
+  classification: true
+  finetune_modes:
+    classification: partial
+    generative: frozen
+    regression: partial
+    superresolution: partial
+  finetune_tasks:
+  - classification
+  - regression
+  - generative
+  - superresolution
+  reconstruction: true
+  regression: true
+  unfreeze_last_k: 4
+tracking:
+  checkpoint_dir: ./outputs/checkpoints
+  deterministic: true
+  figure_dir: ./outputs/figures
+  log_dir: ./outputs/logs
+  output_dir: ./outputs
+  seed: 42
+training:
+  batch_size: 512
+  gradient_accumulation_steps: 1
+  gradient_clip_val: 1.0
+  label_smoothing: 0.1
+  mixed_precision: true
+  num_epochs: 15
+  optimizer:
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    lr: 0.0003
+    name: AdamW
+    weight_decay: 0.01
+  pretrain_epochs: 10
+  pretrain_warmup: 5
+  scheduler:
+    T_0: 10
+    T_mult: 2
+    eta_min: 1.0e-06
+    name: CosineAnnealingWarmRestarts
