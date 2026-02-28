@@ -206,7 +206,8 @@ Or open `notebooks/03_benchmark_results.ipynb` and run all cells.
 ---
 ## Future Plans (GSoC 2026)
 
-- [ ] Scale to full JetClass (100M events) with multi-GPU DDP + Slurm — close accuracy gap (49% → ~70%+)
+- [ ] Scale to more JetClass data with multi-GPU DDP — close accuracy gap (49 → ~70%+)
+- [ ] Quantitative baseline: compare equal-parameter vanilla ParT and ParticleNet on same 100k subset for fair benchmarking
 - [ ] C++/CUDA kernels for EquiLinear layers and pairwise interaction matrix — real-time CMS inference
 - [ ] Scale from jet-level to full event topologies — hierarchical transformer for multiple jets + leptons + MET
 - [ ] Equal-parameter LorentzParT vs ParT ablation (Thanh couldn't complete due to time)
