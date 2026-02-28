@@ -220,14 +220,15 @@ def evaluate_generative(model, loader, device, n_gen=30) -> GenerativeResult:
 
 
 @torch.no_grad()
-def evaluate_superresolution(model, loader, device) -> SuperResolutionResult:
+def evaluate_superresolution(model, loader, device, n_low=30) -> SuperResolutionResult:
     model.eval()
     chamfers, emds, mult_errs = [], [], []
 
     for batch in loader:
-        x  = batch['x'].to(device)
-        pm = batch['padding_mask'].to(device)
-        U  = batch['U'].to(device)
+        x  = batch['x'][:, :n_low, :].to(device)
+        pm = batch['padding_mask'][:, :n_low].to(device)
+        U  = batch['U'][:, :n_low, :n_low, :].to(device)
+
         out    = model(x, pm, U, task='superresolution')
         pred   = out['high_res'].cpu().numpy()                  # (B, n_high, 4)
         if 'superres_target' in batch:

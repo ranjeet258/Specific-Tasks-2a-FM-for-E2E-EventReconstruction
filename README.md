@@ -134,15 +134,15 @@ L = coef_pT × RMSE(pT) + γ × bias_penalty(pT)
 | | pT KL Divergence | 3.7953 | ↓ |
 | | Marginal Hist MSE | 0.0024 | ↓ |
 | **Super-Resolution** | Chamfer Distance | 0.1970 | ↓ lower |
-| | pT EMD | **0.1056** | ↓ |
-| | Multiplicity Error | **0.1768** | ↓ |
+| | pT EMD | **0.1479** | ↓ |
+| | Multiplicity Error | **0.2237** | ↓ |
 
 
 ### Key Observations
 
 - **R²=0.9403** on jet mass regression — strong result, task not attempted in 2025
 - **AUC-ROC=0.8756** — good discriminative ability despite 1000× less training data
-- **Mult-Err=0.177** — model correctly estimates particle multiplicity in super-resolution
+- **Mult-Err=0.22** — model correctly estimates particle multiplicity in super-resolution
 - **Task-specialised checkpoints** — regression model R²=0.94 but near-random on classification (expected: frozen/partial fine-tuning by design)
 - **Top-3 Accuracy=80%** — model ranks correct jet class in top 3 predictions 80% of the time
 - **No standalone baseline available** for exact 100k subset — full comparison requires 100M training (planned). AUC-ROC=0.8756 suggests encoder quality

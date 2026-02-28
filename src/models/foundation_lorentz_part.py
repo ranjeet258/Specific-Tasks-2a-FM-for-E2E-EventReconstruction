@@ -127,6 +127,7 @@ class ParticleAttentionBlock(nn.Module):
 
         w = torch.nan_to_num(F.softmax(scores, dim=-1), nan=0.0)
         w = self.dropout(w)
+        self.last_attn_weights = w.detach()  # store for interpretability
 
         out = torch.bmm(w, v).reshape(B, H, N, D).permute(0, 2, 1, 3).reshape(B, N, C)
         x = residual + self.dropout(self.out_proj(out))
@@ -667,8 +668,11 @@ class FoundationLorentzParT(nn.Module):
         Returns (B, num_particles, 4).
         """
         embeddings, _ = self.encoder(x, padding_mask, U)
-        m   = padding_mask.unsqueeze(-1).float()
-        ctx = (embeddings * m).sum(1) / m.sum(1).clamp(min=1)
+        if padding_mask is not None:
+            m   = padding_mask.unsqueeze(-1).float()
+            ctx = (embeddings * m).sum(1) / m.sum(1).clamp(min=1)
+        else:
+            ctx = embeddings.mean(1)
         return self.generative_head.generate(ctx, num_particles)
 
     # ── Utilities ─────────────────────────────────────────────────────────
