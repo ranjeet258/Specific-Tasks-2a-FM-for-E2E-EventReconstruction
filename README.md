@@ -82,44 +82,6 @@ Shared embeddings (B, N, 128)  +  equivariant features (B, N, 16)
 
 ---
 
-## Training Pipeline
-
-### Step 1 — Preprocess
-```bash
-python scripts/preprocess_data.py \
-    --input-dir  ./data/raw \
-    --output-dir ./data/jetclass_100k \
-    --num-events 100000
-```
-
-### Step 2 — Pretrain (Masked Particle Autoencoder)
-```bash
-python pretrain.py --config configs/foundation_config.yaml
-# Checkpoints → ./outputs/foundation_lorentz_part_gsoc2026/checkpoints/
-```
-
-### Step 3 — Fine-tune (All 4 Tasks)
-```bash
-python main.py --config configs/foundation_config.yaml
-# Checkpoints → ./outputs/finetune/{classification,regression,generative,superresolution}/
-```
-
-### Step 4 — Evaluate
-```bash
-python evaluate.py \
-    --ckpt-cls  outputs/finetune/classification/classification_best.pt \
-    --ckpt-reg  outputs/finetune/regression/regression_best.pt \
-    --ckpt-gen  outputs/finetune/generative/generative_best.pt \
-    --ckpt-sr   outputs/finetune/superresolution/superresolution_best.pt \
-    --tasks classification regression generative superresolution \
-    --data-path data/jetclass_100k \
-    --batch-size 256 \
-    --num-workers 2 \
-    --save-results outputs/eval_all_results.json
-```
-
-Or open `notebooks/03_benchmark_results.ipynb` and run all cells.
-
 ---
 
 ## Key Improvements Over Last Year
@@ -148,15 +110,6 @@ L = coef_pT × RMSE(pT) + γ × bias_penalty(pT)
 
 - Added `LayerNorm` after encoder output
 - Prevents representation collapse during fine-tuning across multiple tasks
-
-### 4. Flexible Fine-Tuning Strategy
-
-| Task | Fine-tune Mode | Encoder Status |
-|------|---------------|----------------|
-| Classification | Partial (last 4 layers) | Top 4 layers unfrozen |
-| Regression | Partial (last 4 layers) | Top 4 layers unfrozen |
-| Generative | Frozen | All layers frozen |
-| Super-Resolution | Partial (last 4 layers) | Top 4 layers unfrozen |
 
 ---
 
@@ -203,13 +156,52 @@ L = coef_pT × RMSE(pT) + γ × bias_penalty(pT)
 
 ### Benchmark Chart
 
-![Benchmark Summary](assets/benchmark_summary_all.png)
+![Benchmark Summary](outputs/benchmark_summary_all.png)
 
 > See `notebooks/02_evaluation_and_results.ipynb` for full plots:
 > confusion matrix, ROC curves, 2D reconstruction histograms (pT, η, φ, E).
 
 ---
 
+## Training Pipeline
+
+### Step 1 — Preprocess
+```bash
+python scripts/preprocess_data.py \
+    --input-dir  ./data/raw \
+    --output-dir ./data/jetclass_100k \
+    --num-events 100000
+```
+
+### Step 2 — Pretrain (Masked Particle Autoencoder)
+```bash
+python pretrain.py --config configs/foundation_config.yaml
+# Checkpoints → ./outputs/foundation_lorentz_part_gsoc2026/checkpoints/
+```
+
+### Step 3 — Fine-tune (All 4 Tasks)
+```bash
+python main.py --config configs/foundation_config.yaml
+# Checkpoints → ./outputs/finetune/{classification,regression,generative,superresolution}/
+```
+
+### Step 4 — Evaluate
+```bash
+python evaluate.py \
+    --ckpt-cls  outputs/finetune/classification/classification_best.pt \
+    --ckpt-reg  outputs/finetune/regression/regression_best.pt \
+    --ckpt-gen  outputs/finetune/generative/generative_best.pt \
+    --ckpt-sr   outputs/finetune/superresolution/superresolution_best.pt \
+    --tasks classification regression generative superresolution \
+    --data-path data/jetclass_100k \
+    --batch-size 256 \
+    --num-workers 2 \
+    --save-results outputs/eval_all_results.json
+```
+
+Or open `notebooks/03_benchmark_results.ipynb` and run all cells.
+
+---
 ## Future Plans (GSoC 2026)
 
 - [ ] FlashAttention O(N log N) for N=128 particle sequences
