@@ -49,7 +49,7 @@ Usage
       --test-split  0.1 \\
       --seed 42
 
-Author: GSoC 2026 Candidate
+Author: Ranjeet Gupta
 """
 
 import argparse
