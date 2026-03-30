@@ -1,6 +1,5 @@
 """
 Multi-Task Trainer for Foundation Model Training
-================================================
 Extends the original 3-task trainer to support all 5 tasks:
   1. Classification  (cross-entropy + label smoothing)
   2. Regression      (MSE / Huber)
@@ -49,33 +48,7 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class MultiTaskTrainer:
-    """
-    Simultaneous training on classification + regression + reconstruction.
-    Unchanged interface from original — just extended logging and task-weight
-    scheduling hook.
-
-    Parameters
-    ----------
-    model             : FoundationLorentzParT
-    train_loader      : DataLoader (returns dict batches from JetClassDataset)
-    val_loader        : DataLoader
-    test_loader       : DataLoader, optional
-    criterion         : HybridLoss
-    optimizer         : Optimizer (AdamW recommended)
-    scheduler         : LR scheduler, optional
-    device            : cuda / cpu
-    num_epochs        : training epochs
-    task_modes        : which tasks are active
-    mixed_precision   : use AMP FP16
-    gradient_clip_val : max gradient norm
-    save_dir          : output root directory
-    experiment_name   : subdirectory name
-    log_interval      : steps between batch-level logs
-    save_checkpoint_interval : epochs between checkpoints
-    eval_metrics      : {task: metric_fn} callables for additional metrics
-    early_stopping_patience : None = disabled
-    verbose           : print epoch summaries
-    """
+   
 
     def __init__(
         self,

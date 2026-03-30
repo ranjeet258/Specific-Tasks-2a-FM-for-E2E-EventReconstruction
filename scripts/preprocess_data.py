@@ -1,11 +1,9 @@
 """
 Preprocessing Script for JetClass Dataset
-==========================================
 Handles the filename-based class structure where each ROOT file
 belongs to exactly one class (e.g. HToBB_120.root → class Hbb).
 
 Confirmed branch names (from ZJetsToNuNu_120.root inspection):
----------------------------------------------------------------
   part_px, part_py   →  pt = sqrt(px²+py²)
   part_deta          →  eta relative to jet axis
   part_dphi          →  phi relative to jet axis
@@ -15,7 +13,6 @@ Stored particle feature layout: [pt, deta, dphi, energy]
   This is the standard JetClass input representation used in the paper.
 
 File → Class mapping
---------------------
   ZJetsToNuNu  → 0  QCD
   HToBB        → 1  Hbb
   HToCC        → 2  Hcc
@@ -28,7 +25,6 @@ File → Class mapping
   TTBar        → 9  Tbq
 
 Pipeline
---------
   1. Scan input directory, group files by class prefix
   2. Auto-detect TTree name and branch names from first file
   3. Load each class independently (cap = num_events // n_classes)
@@ -38,7 +34,6 @@ Pipeline
   7. Per-class independent 80/10/10 split → shuffle → save .npz + metadata
 
 Usage
------
   python scripts/preprocess_data.py \\
       --input-dir  ./data/raw \\
       --output-dir ./data/jetclass_100k \\
@@ -262,17 +257,6 @@ def sanity_check(particles: np.ndarray, labels: np.ndarray):
 # ---------------------------------------------------------------------------
 
 class JetClassPreprocessor:
-    """
-    End-to-end preprocessor for the filename-separated JetClass dataset.
-
-    Parameters
-    ----------
-    input_dir     : directory containing *.root files
-    output_dir    : where to write train.npz / val.npz / test.npz
-    max_particles : truncate/pad each jet to this many particles (default 128)
-    num_events    : total event cap split evenly across classes (default 100k)
-    seed          : random seed (default 42)
-    """
 
     def __init__(
         self,
@@ -301,20 +285,7 @@ class JetClassPreprocessor:
         tree_name:  str,
         px_b: str, py_b: str, deta_b: str, dphi_b: str, e_b: str,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Load up to max_events jets from same-class ROOT files.
-
-        Stored layout: particles[i, :, :] = [pt, deta, dphi, energy]
-          pt   = sqrt(px² + py²)
-          deta = part_deta  (relative to jet axis)
-          dphi = part_dphi  (relative to jet axis)
-
-        Returns
-        -------
-        particles     : (n, max_particles, 4)  float32
-        labels        : (n,)                   int32
-        num_particles : (n,)                   int32
-        """
+        
         out_p  = np.zeros((max_events, self.max_particles, 4), dtype=np.float32)
         out_n  = np.zeros(max_events, dtype=np.int32)
         loaded = 0
@@ -395,12 +366,7 @@ class JetClassPreprocessor:
         val_frac:   float = 0.1,
         test_frac:  float = 0.1,
     ) -> Tuple[Dict, Dict, Dict]:
-        """
-        Subsample every class to min_count, split each independently,
-        then concatenate and shuffle each split.
-
-        Using exact remainders avoids rounding drift across splits.
-        """
+  
         rng    = np.random.default_rng(self.seed)
         labels = data["labels"]
 

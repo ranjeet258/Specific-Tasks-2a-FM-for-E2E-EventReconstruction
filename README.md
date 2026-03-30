@@ -1,4 +1,4 @@
-# Foundation models for End-to-End event reconstruction - Progress Update
+# Foundation models for End-to-End event reconstruction - Specific Task 2a
 
 > **Building on Thanh Nguyen's GSoC 2025 work**, this project extends the LorentzParT hybrid model into a complete **multi-task foundation model** with masked particle pretraining + 4 downstream fine-tuning tasks.
 
@@ -60,7 +60,7 @@ Shared embeddings (B, N, 128)  +  equivariant features (B, N, 16)
 ---
 
 ## Dataset
-
+Note: i have taken 100K sample in npz formate[Download](https://drive.google.com/drive/folders/1WAw3EgQXNI_dthVR6D20a5MdjHEpjZYZ?usp=sharing)
 [JetClass]
 
 | Split | Events |
@@ -83,7 +83,7 @@ Shared embeddings (B, N, 128)  +  equivariant features (B, N, 16)
 
 ---
 
-## Key Improvements Over Last Year
+## Key Improvements
 
 ### 1. Physics-Aware `ConservationLoss`
 
@@ -114,7 +114,7 @@ L = coef_pT × RMSE(pT) + γ × bias_penalty(pT)
 
 ## Results (JetClass 100k, 15 Fine-Tuning Epochs)  
 
-> Training done on **Kaggle (GPU P100)**. Evaluated on 10,000 test jets.
+> Training done on **Kaggle**. Evaluated on 10,000 test jets.
 > Thanh 2025 trained on **100M events** — accuracy gap is entirely due to
 > dataset size (100k vs 100M = 1000× less data).
 

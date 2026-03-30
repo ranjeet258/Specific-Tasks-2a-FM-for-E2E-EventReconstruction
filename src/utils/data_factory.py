@@ -6,7 +6,6 @@ Specifically configured for 100,000 events with 80-10-10 train-val-test split as
 the GSoC task requirements.
 
 Physics Data Format:
--------------------
 Each jet contains up to 128 particles, where each particle is characterized by:
 - pT:   Transverse momentum       (right-skewed, 0-922 GeV)
 - deta: Relative pseudorapidity   (already small, ~[-3, 3])
@@ -14,7 +13,6 @@ Each jet contains up to 128 particles, where each particle is characterized by:
 - E:    Energy                    (right-skewed, 0-2570 GeV)
 
 Normalization Strategy (Optimal):
-----------------------------------
 Different features need different treatment:
 
   pT   -> log1p(pT) then z-score   (log1p compresses the right-skewed tail)
@@ -29,12 +27,11 @@ All stats are computed from the TRAINING set only, then passed to val/test
 to prevent any data leakage.
 
 Dataset Tasks:
--------------
 1. Classification: Jet tagging (10 classes in JetClass)
 2. Regression:     Jet mass prediction      (z-score normalized)
 3. Reconstruction: Masked particle 4-momentum (log1p + z-score for pT/E)
 
-Author: GSoC 2026 Candidate
+Author: Ranjeet Gupta
 """
 
 from pathlib import Path
@@ -80,24 +77,6 @@ class NormStats:
 # ---------------------------------------------------------------------------
 
 class JetClassDataset(Dataset):
-    """
-    Dataset for loading JetClass particle jets with optimal normalization.
-
-    Parameters
-    ----------
-    data_path      : path to preprocessed .npz directory
-    split          : 'train', 'val', or 'test'
-    max_particles  : maximum particles per jet (zero-padded)
-    mask_particle  : whether to mask one particle for reconstruction task
-    mask_strategy  : 'random', 'high_pt', or 'biased'
-    compute_mass   : whether to include jet mass as regression target
-    transform      : optional additional transform callable
-    particle_stats : list of 4 NormStats [pT, deta, dphi, E]
-                     If None, computed from this split (use only for train).
-                     Pass train's stats to val/test.
-    mass_stats     : NormStats for jet mass normalization.
-                     If None, computed from this split (use only for train).
-    """
 
     def __init__(
         self,
@@ -170,16 +149,7 @@ class JetClassDataset(Dataset):
     # ------------------------------------------------------------------
 
     def _compute_particle_stats(self) -> List[NormStats]:
-        """
-        Compute per-feature normalization stats over all VALID (non-padded)
-        particles in this split.
-
-        pT and E: apply log1p first to compress the right-skewed distribution,
-                  then compute mean/std of the log-transformed values.
-        deta:     compute mean/std directly (already symmetric, small range).
-        dphi:     identity normalization (mean=0, std=1) — no change applied.
-                  The cosine-based dphi loss in HybridLoss handles periodicity.
-        """
+        
         valid_mask  = (np.arange(self.max_particles)[None, :]
                        < self.num_particles[:, None])       # (N, P) bool
         valid_parts = self.particles[valid_mask]             # (M, 4)
@@ -310,13 +280,7 @@ class JetClassDataset(Dataset):
     # ------------------------------------------------------------------
 
     def _to_multivector(self, particles: np.ndarray) -> np.ndarray:
-        """
-        Convert normalized [pT, deta, dphi, E] -> 16D multivector.
-
-        pT and E here are already log1p + z-score normalized, so they are
-        on a unit scale. We use them to build Cartesian 3-momentum so that
-        the EquiLinear layers receive well-scaled inputs.
-        """
+    
         N  = particles.shape[0]
         mv = np.zeros((N, 16), dtype=np.float32)
 
@@ -345,10 +309,7 @@ class JetClassDataset(Dataset):
         particles: np.ndarray,
         num_valid: int
     ) -> np.ndarray:
-        """
-        Pairwise features [delta_eta, delta_phi, delta_R, log(pT_i * pT_j)].
-        Built from NORMALIZED particles so all values stay in a sensible range.
-        """
+       
         N = self.max_particles
         U = np.zeros((N, N, 4), dtype=np.float32)
 
@@ -430,19 +391,7 @@ def create_dataloaders(
     distributed:   bool = False,
     seed:          int = 42,
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
-    """
-    Create train / val / test DataLoaders with shared normalization stats.
-
-    Normalization flow:
-    -------------------
-    1. Train dataset computes particle_stats and mass_stats from training data.
-    2. Val and test datasets receive those exact same stats.
-    3. No data leakage: val/test stats never influence normalization parameters.
-
-    Returns
-    -------
-    train_loader, val_loader, test_loader
-    """
+   
     torch.manual_seed(seed)
     np.random.seed(seed)
 

@@ -44,12 +44,7 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class InteractionEmbedding(nn.Module):
-    """
-    Pairwise particle interaction → per-head attention bias.
-
-    Computes (Δη, Δφ, ΔR, log(pT_i·pT_j)) between all particle pairs,
-    maps to num_heads scalars, and adds them to attention logits.
-    """
+   
     def __init__(
         self,
         num_interaction_features: int = 4,
@@ -71,10 +66,7 @@ class InteractionEmbedding(nn.Module):
 
 
 class ParticleAttentionBlock(nn.Module):
-    """
-    Pre-norm transformer block with interaction-biased multi-head attention.
-    Identical to original implementation.
-    """
+   
     def __init__(
         self,
         embed_dim: int = 128,
@@ -139,11 +131,7 @@ class ParticleAttentionBlock(nn.Module):
 
 
 class FoundationLorentzParTEncoder(nn.Module):
-    """
-    Lorentz-equivariant particle encoder.
-    EquiLinear → proj → N×ParticleAttentionBlock → proj_back → EquiLinear
-    (Unchanged from original except added norm_out for stable fine-tuning.)
-    """
+    
     def __init__(
         self,
         embed_dim: int = 128,
@@ -181,12 +169,7 @@ class FoundationLorentzParTEncoder(nn.Module):
         )
 
     def forward(self, x: Tensor, padding_mask: Tensor, U: Tensor) -> Tuple[Tensor, Tensor]:
-        """
-        x            : (B, N, 16)
-        padding_mask : (B, N)      True = valid
-        U            : (B, N, N, 4)
-        Returns      : embeddings (B,N,D), equivariant_features (B,N,16)
-        """
+      
         B, N, F = x.shape
         attn_bias = self.interaction_embed(U)
 
@@ -211,10 +194,9 @@ class FoundationLorentzParTEncoder(nn.Module):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ClassificationHead(nn.Module):
-    """
-    Jet tagging: class-token attention + mean-pool skip → MLP.
-    Skip connection prevents class-token collapse (critical fix).
-    """
+    # Jet tagging: class-token attention + mean-pool skip → MLP.
+    # Skip connection prevents class-token collapse (critical fix).
+
     def __init__(
         self,
         embed_dim: int = 128,
@@ -314,19 +296,14 @@ class ReconstructionHead(nn.Module):
 
 
 class ConditionalVAEHead(nn.Module):
-    """
-    Conditional VAE generative head.
 
-    Generates particle 4-momenta conditioned on the jet-level context embedding.
+    # Generates particle 4-momenta conditioned on the jet-level context embedding.
 
-    Pre-training / fine-tuning for generation:
-      • Encoder   q(z | particle, jet_ctx)  →  μ, log σ²
-      • Decoder   p(x | z,        jet_ctx)  →  (pT, deta, dphi, E)
-      • Loss = reconstruction MSE + β·KL  (β-VAE)
+    # Pre-training / fine-tuning for generation:
+    #   • Encoder   q(z | particle, jet_ctx)  →  μ, log σ²
+    #   • Decoder   p(x | z,        jet_ctx)  →  (pT, deta, dphi, E)
+    #   • Loss = reconstruction MSE + β·KL  (β-VAE)
 
-    Physics motivation: the jet context acts as a "prior" encoding the overall
-    jet kinematics, while z captures particle-level deviations.
-    """
     def __init__(
         self,
         embed_dim:    int   = 128,
@@ -369,15 +346,7 @@ class ConditionalVAEHead(nn.Module):
         padding_mask: Tensor,  # (B, N)
         raw_particles: Tensor, # (B, N, 4)  normalized [pT, deta, dphi, E]
     ) -> Dict[str, Tensor]:
-        """
-        Returns dict:
-          'recon'      : (B, N, 4)           per-particle reconstructions
-          'mu'         : (B, N, latent_dim)
-          'logvar'     : (B, N, latent_dim)
-          'loss'       : scalar              recon_loss + β·kl_loss
-          'recon_loss' : scalar
-          'kl_loss'    : scalar
-        """
+
         B, N, _ = x_embed.shape
 
         # Jet-level context = masked mean pool
@@ -423,11 +392,7 @@ class ConditionalVAEHead(nn.Module):
 
     @torch.no_grad()
     def generate(self, jet_context: Tensor, num_particles: int = 30) -> Tensor:
-        """
-        Sample new particles from the prior p(z) ~ N(0,I).
-        jet_context : (B, embed_dim)
-        Returns     : (B, num_particles, 4)
-        """
+       
         B   = jet_context.size(0)
         z   = torch.randn(B, num_particles, self.latent_dim, device=jet_context.device)
         ctx = jet_context.unsqueeze(1).expand(-1, num_particles, -1)
@@ -435,20 +400,15 @@ class ConditionalVAEHead(nn.Module):
 
 
 class SuperResolutionHead(nn.Module):
-    """
-    Jet super-resolution head: low-res → high-res particle upsampling.
+   
 
-    Task: given a jet with N_low particles, predict N_high > N_low particles.
+    # Strategy:
+    #   1. Mean-pool low-res embeddings → jet context (for skip connection)
+    #   2. N_high learnable seed queries represent target high-res positions
+    #   3. Cross-attention: seed queries attend to low-res particle embeddings
+    #   4. Project to 4-momentum predictions (pT, deta, dphi, E)
 
-    Strategy:
-      1. Mean-pool low-res embeddings → jet context (for skip connection)
-      2. N_high learnable seed queries represent target high-res positions
-      3. Cross-attention: seed queries attend to low-res particle embeddings
-      4. Project to 4-momentum predictions (pT, deta, dphi, E)
-
-    Physics motivation: simulates the task of recovering fine-grained
-    calorimeter deposits from coarser tracker-only information.
-    """
+  
     def __init__(
         self,
         embed_dim:  int   = 128,
@@ -488,35 +448,15 @@ class SuperResolutionHead(nn.Module):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class FoundationLorentzParT(nn.Module):
-    """
-    Foundation Model for End-to-End Event Reconstruction in High-Energy Physics.
+    
+    # 5 tasks dispatched from a single shared encoder:
+    #   'reconstruction'  — MPA pre-training (requires mask_indices)
+    #   'classification'  — jet tagging
+    #   'regression'      — jet mass / property prediction
+    #   'generative'      — CVAE particle generation (requires raw_particles)
+    #   'superresolution' — low-res → high-res upsampling
+    #   'all'             — classification + regression + reconstruction simultaneously
 
-    5 tasks dispatched from a single shared encoder:
-      'reconstruction'  — MPA pre-training (requires mask_indices)
-      'classification'  — jet tagging
-      'regression'      — jet mass / property prediction
-      'generative'      — CVAE particle generation (requires raw_particles)
-      'superresolution' — low-res → high-res upsampling
-      'all'             — classification + regression + reconstruction simultaneously
-
-    Parameters
-    ----------
-    max_num_particles    : max particles per jet
-    num_particle_features: raw feature count (4: pT, deta, dphi, E)
-    num_classes          : jet classes (10 for JetClass)
-    num_regression_targets : regression output count
-    embed_dim            : transformer width
-    num_heads            : attention heads
-    num_layers           : transformer depth
-    dropout              : dropout rate
-    expansion_factor     : FFN expansion
-    pair_embed_dims      : pairwise MLP hidden dims (excl. final num_heads entry)
-    latent_dim           : VAE latent dimension
-    n_low / n_high       : super-resolution particle counts
-    in_s_channels        : EquiLinear scalar input channels
-    out_s_channels       : EquiLinear scalar output channels
-    vae_beta             : β for KL weight in CVAE loss
-    """
 
     def __init__(
         self,
@@ -603,26 +543,7 @@ class FoundationLorentzParT(nn.Module):
         mask_indices:  Optional[Tensor] = None,
         raw_particles: Optional[Tensor] = None,
     ) -> Dict[str, Tensor]:
-        """
-        Parameters
-        ----------
-        x             : (B, N, 16)   multivector particle features
-        padding_mask  : (B, N)       True = valid particle
-        U             : (B, N, N, 4) pairwise interaction features
-        task          : 'all' | 'classification' | 'regression' |
-                        'reconstruction' | 'generative' | 'superresolution'
-        mask_indices  : (B,)  required for 'reconstruction' and 'all'
-        raw_particles : (B, N, 4)  normalized [pT, deta, dphi, E]
-                        required for 'generative'
-
-        Returns
-        -------
-        Dict[str, Tensor]
-          'all'             → {classification, regression, reconstruction}
-          'generative'      → {recon, mu, logvar, loss, recon_loss, kl_loss}
-          'superresolution' → {high_res: (B, n_high, 4)}
-          others            → single-key dict matching task name
-        """
+   
         embeddings, equivariant_features = self.encoder(x, padding_mask, U)
         outputs: Dict[str, Tensor] = {}
 

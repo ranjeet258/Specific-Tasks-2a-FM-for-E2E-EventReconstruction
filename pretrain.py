@@ -1,8 +1,6 @@
 """
 pretrain.py — Masked Particle Autoencoder (MPA) Pre-Training
-=============================================================
 Self-supervised pre-training for FoundationLorentzParT.
-
 Strategy: Masked Particle Autoencoder
   1. Randomly mask K% of particles per jet (no labels needed)
   2. Replace masked positions with learnable [MASK] token
@@ -10,7 +8,6 @@ Strategy: Masked Particle Autoencoder
   4. Reconstruction head predicts 4-momenta of masked particles
   5. Loss = ConservationLoss on masked positions only
   6. Save encoder weights → fine-tune on downstream tasks
-
 Three masking strategies:
   'random' : uniform random
   'biased' : high-pT particles more likely masked (model learns from hard cores)
@@ -164,15 +161,7 @@ class ParticleMasker:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class MaskedParticlePreTrainer:
-    """
-    Self-supervised pre-training loop.
 
-    After training, saves encoder weights to:
-      <save_dir>/encoder_best.pt   (lowest val loss)
-      <save_dir>/encoder_final.pt  (last epoch)
-
-    These can be loaded by FineTuneTrainer.load_pretrained_encoder().
-    """
 
     def __init__(
         self,

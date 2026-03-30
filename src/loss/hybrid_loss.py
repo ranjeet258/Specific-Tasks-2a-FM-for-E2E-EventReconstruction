@@ -31,43 +31,6 @@ import torch.nn.functional as F
 
 
 class ConservationLoss(nn.Module):
-    """
-    Physics-aware loss for masked particle reconstruction.
-
-    Physical Motivation:
-    -------------------
-    When reconstructing a masked particle's 4-momentum, the model should respect:
-
-    1. Conservation Laws: The masked particle must have momentum/energy that
-       conserves the total jet momentum/energy.
-
-    2. Detector Resolution: Different quantities have different measurement
-       uncertainties:
-       - pT and E : Limited by calorimeter resolution (RMSE loss)
-       - deta     : Better measured; L1 loss encourages accurate extreme predictions
-       - dphi     : Periodic variable; use angular distance (cosine similarity)
-
-    3. Distribution Bias: RMSE loss helps correct the positive bias that standard
-       MSE produces for right-skewed distributions like pT and energy.
-
-    Parameters
-    ----------
-    beta : float
-        Weight to reward extreme deta predictions (counteracts model's tendency
-        to predict safe values near zero)
-    gamma : float
-        Penalty for positive bias in pT and energy predictions
-    loss_coef : List[float]
-        Coefficients balancing [pT, deta, dphi, energy] losses
-    reduction : str
-        Reduction method: 'mean', 'sum', or 'none'
-
-    References
-    ----------
-    Eric Reinhardt (2023). "GSOC 2023 with ML4SCI: Reconstruction and
-    Classification of Particle Collisions with Masked Transformer Autoencoders"
-    """
-
     def __init__(
         self,
         beta: float = 1.0,
@@ -89,49 +52,12 @@ class ConservationLoss(nn.Module):
     # ------------------------------------------------------------------
 
     def _pT_loss(self, pT_pred: Tensor, pT_true: Tensor) -> Tensor:
-        """
-        Transverse momentum loss.
-
-        Physics Insight:
-        ---------------
-        pT distribution is right-skewed (most particles have low pT, few have
-        high pT). Plain MSE tends to overpredict to minimise error on high-pT
-        particles. RMSE with a small epsilon is more stable and less biased.
-        """
         return torch.sqrt(F.mse_loss(pT_pred, pT_true, reduction=self.reduction) + 1e-8)
 
     def _deta_loss(self, deta_pred: Tensor, deta_true: Tensor) -> Tensor:
-        """
-        Relative pseudorapidity loss.
-
-        Physics Insight:
-        ---------------
-        deta measures how forward/backward a particle goes relative to the
-        jet axis:
-          deta ≈ 0  : particle points in the same direction as the jet
-          |deta| large: particle is well separated from the jet core
-
-        Models tend to predict safe values near 0. L1 loss is more robust
-        to outliers and encourages accurate extreme predictions, counteracting
-        this shrinkage bias.
-        """
         return F.l1_loss(deta_pred, deta_true, reduction=self.reduction)
 
     def _dphi_loss(self, dphi_pred: Tensor, dphi_true: Tensor) -> Tensor:
-        """
-        Relative azimuthal angle loss respecting periodicity.
-
-        Physics Insight:
-        ---------------
-        dphi is periodic: -π and +π represent the same direction.
-        Plain MSE would penalise dphi = -π and dphi = +π as maximally wrong
-        even though they are identical.
-
-        Solution: Convert to unit vectors and use cosine similarity.
-          cos_sim = 1  → perfect match  (loss = 0)
-          cos_sim = -1 → opposite       (loss = 2)
-        This naturally handles the periodicity with no special casing.
-        """
         sin_pred = torch.sin(dphi_pred)
         cos_pred = torch.cos(dphi_pred)
         sin_true = torch.sin(dphi_true)
@@ -171,26 +97,6 @@ class ConservationLoss(nn.Module):
         target: Tensor,
         return_components: bool = False
     ) -> Union[Tensor, Tuple[Tensor, Tuple[Tensor, ...]]]:
-        """
-        Compute conservation-aware reconstruction loss.
-
-        Parameters
-        ----------
-        pred : Tensor of shape (B, 4)
-            Predicted particle features [pT, deta, dphi, energy]
-        target : Tensor of shape (B, 4)
-            True particle features    [pT, deta, dphi, energy]
-        return_components : bool
-            If True, also return (pT_loss, deta_loss, dphi_loss, energy_loss)
-
-        Returns
-        -------
-        loss : Tensor
-            Weighted sum of component losses
-        components : Tuple[Tensor, ...], optional
-            (pT_loss, deta_loss, dphi_loss, energy_loss) — only when
-            return_components=True
-        """
         # Unpack feature columns
         pT_pred,   deta_pred,   dphi_pred,   E_pred   = (
             pred[:, 0], pred[:, 1], pred[:, 2], pred[:, 3]
@@ -219,31 +125,6 @@ class ConservationLoss(nn.Module):
 
 
 class HybridLoss(nn.Module):
-    """
-    Multi-task loss combining classification, regression, and reconstruction.
-
-    Loss Balancing Strategy:
-    -----------------------
-    task_weights control the relative importance of each objective.
-    Typical schedules:
-      Pre-training  : reconstruction >> classification, regression
-      Fine-tuning   : increase classification, reduce reconstruction
-
-    Parameters
-    ----------
-    task_weights : Dict[str, float]
-        {"classification": w1, "regression": w2, "reconstruction": w3}
-    classification_criterion : nn.Module, optional
-        Defaults to CrossEntropyLoss with label_smoothing
-    regression_criterion : str
-        "mse" or "huber"
-    reconstruction_criterion : nn.Module, optional
-        Defaults to ConservationLoss
-    huber_delta : float
-        Delta for HuberLoss (only used when regression_criterion="huber")
-    label_smoothing : float
-        Label smoothing for classification (reduces overconfidence)
-    """
 
     def __init__(
         self,
@@ -292,27 +173,6 @@ class HybridLoss(nn.Module):
         targets: Dict[str, Tensor],
         return_components: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, Dict[str, Tensor]]]:
-        """
-        Compute weighted multi-task loss.
-
-        Parameters
-        ----------
-        predictions : Dict[str, Tensor]
-            "classification" : (B, num_classes) logits
-            "regression"     : (B, num_targets) predictions
-            "reconstruction" : (B, 4)           [pT, deta, dphi, energy]
-        targets : Dict[str, Tensor]
-            "classification" : (B,)             class indices
-            "regression"     : (B, num_targets) target values
-            "reconstruction" : (B, 4)           [pT, deta, dphi, energy]
-        return_components : bool
-            If True, return (total_loss, loss_dict)
-
-        Returns
-        -------
-        total_loss : Tensor
-        loss_dict  : Dict[str, Tensor]  — only when return_components=True
-        """
         total_loss = torch.tensor(0.0, device=next(iter(predictions.values())).device)
         loss_components: Dict[str, Tensor] = {}
 

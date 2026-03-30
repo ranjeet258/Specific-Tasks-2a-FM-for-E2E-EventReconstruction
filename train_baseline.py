@@ -1,7 +1,7 @@
 """
 Train baseline models (ParT, ParticleNet) on 100k JetClass subset.
 
-GSoC 2026 Task 2a: Benchmark requirement
+ Benchmark requirement
 - Train vanilla ParT and ParticleNet on same 100k data
 - Parameter-matched to FoundationLorentzParT (~2.4M)
 - Fair comparison for evaluating improvements
@@ -22,18 +22,7 @@ from src.utils.data_factory import get_dataloaders
 
 
 def train_baseline(model, train_loader, val_loader, args, device):
-    """
-    Train a classification baseline model.
-    
-    Args:
-        model: PyTorch model (ParT or ParticleNet)
-        train_loader: Training data loader
-        val_loader: Validation data loader
-        args: Command line arguments
-        device: torch.device
-    """
-    
-    # Optimizer (same as FoundationLorentzParT)
+     # Optimizer (same as FoundationLorentzParT)
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=args.lr,
@@ -271,7 +260,7 @@ def main():
     # ========================================================================
     train_baseline(model, train_loader, val_loader, args, device)
     
-    print(f"\n✅ Success! Baseline ready for evaluation.")
+    print(f"\n Success! Baseline ready for evaluation.")
     print(f"   Next: Run comparative evaluation with:")
     print(f"   python evaluate.py --baseline-{args.model} {args.save_dir}/{args.model}_baseline_100k.pt")
 

@@ -62,7 +62,7 @@ def load_config(config_path: str) -> Dict:
 
 
 def setup_distributed():
-    """Setup distributed training if launched with torchrun."""
+
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         rank       = int(os.environ['RANK'])
         world_size = int(os.environ['WORLD_SIZE'])
@@ -182,11 +182,7 @@ def set_seed(seed: int, deterministic: bool = False):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def stage_pretrain(config: Dict, device: torch.device) -> str:
-    """
-    Self-supervised Masked Particle Autoencoder pre-training.
-    No labels required — learns from reconstruction loss only.
-    Returns path to saved encoder checkpoint.
-    """
+  
     from pretrain import MaskedParticlePreTrainer
 
     print("\n" + "=" * 70)
@@ -236,11 +232,7 @@ def stage_multitask(
     rank: int = 0,
     pretrain_mode: bool = False,
 ) -> str:
-    """
-    Original multi-task training loop.
-    Optionally initialises encoder from MPA pre-trained weights.
-    Returns path to best model checkpoint.
-    """
+    
     is_main = (rank == 0)
 
     if is_main:
